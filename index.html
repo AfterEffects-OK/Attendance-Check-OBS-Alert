@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>出席通知オーバーレイ（下から差し込み・左下）</title>
+    <title>出席通知オーバーレイ（薄い背景付き・左下）</title>
     <style>
         body {
             margin: 0;
@@ -27,16 +27,15 @@
         }
 
         .notification-card {
-            background: transparent;
+            /* 薄い半透明の黒い背景を適用（背景が少し透ける上品なデザイン） */
+            background: rgba(15, 23, 42, 0.65);
             color: #ffffff;
             padding: 14px 28px;
-            border-radius: 4px;
+            border-radius: 6px;
             
-            /* 文字の視認性を高めるドロップシャドウ */
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 
-                         -3px -3px 6px rgba(0, 0, 0, 0.9),
-                         3px -3px 6px rgba(0, 0, 0, 0.9),
-                         -3px -3px 6px rgba(0, 0, 0, 0.9);
+            /* わずかに影をつけて立体感を出す */
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px); /* 背面の映像を少しぼかす効果 */
 
             border-left: 10px solid #3b82f6; /* 左側の青いアクセントライン */
             font-size: 42px;                  /* 大きな文字サイズ */
@@ -99,25 +98,25 @@
             }
         }
 
-    function showNotification(timestampStr, name) {
-        const container = document.getElementById('notification-container');
+        function showNotification(timestampStr, name) {
+            const container = document.getElementById('notification-container');
 
-        let timeText = timestampStr;
-        const timeMatch = timestampStr.match(/(\d{1,2}):(\d{2}):(\d{2})/);
-        if (timeMatch) {
-            timeText = `${timeMatch[1]}時${timeMatch[2]}分${timeMatch[3]}秒`;
+            let timeText = timestampStr;
+            const timeMatch = timestampStr.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+            if (timeMatch) {
+                timeText = `${timeMatch[1]}時${timeMatch[2]}分${timeMatch[3]}秒`;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'notification-card';
+            card.textContent = `${timeText} ${name}さんが出席登録しました`;
+
+            container.appendChild(card);
+
+            setTimeout(() => {
+                card.remove();
+            }, 5000);
         }
-
-        const card = document.createElement('div');
-        card.className = 'notification-card';
-        card.textContent = `${timeText} ${name}さんが出席登録しました`;
-
-        container.appendChild(card);
-
-        setTimeout(() => {
-            card.remove();
-        }, 5000);
-    }
 
         setInterval(checkNewAttendance, POLL_INTERVAL);
     </script>
