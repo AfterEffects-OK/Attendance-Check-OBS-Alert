@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>出席通知オーバーレイ（不透明・コンパクト）</title>
+    <title>出席通知オーバーレイ（薄い黄色・太字版）</title>
     <style>
         body {
             margin: 0;
@@ -26,19 +26,21 @@
         }
 
         .notification-card {
-            /* 完全な不透明の濃い紺色背景に変更（フェードのちらつきを解消） */
-            background: rgb(15, 23, 42);
-            color: #ffffff;
+            /* 薄い黄色背景 ＆ 黒文字（シャドウ・エッジなし） */
+            background: #fef08a;
+            color: #111827;
             
-            /* 上下のパディングを詰めてコンパクトに調整 (上下: 6px, 左右: 20px) */
+            /* 上下のパディングを詰めたスリムな設計 */
             padding: 6px 20px;
             border-radius: 4px;
             
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            border-left: 8px solid #3b82f6;
+            /* シャドウやエッジは完全に排除し、アクセントの左線だけ残す */
+            box-shadow: none;
+            border-left: 8px solid #ca8a04;
             
             font-size: 42px;
-            font-weight: bold;
+            /* 文字が細く見えないよう、ウェイトを「900（極太）」に強化 */
+            font-weight: 900;
             letter-spacing: 0.5px;
             
             opacity: 0;
@@ -116,7 +118,7 @@
 
             setTimeout(() => {
                 card.remove();
-            }, 5000);
+            }, 50000);
         }
 
         setInterval(checkNewAttendance, POLL_INTERVAL);
