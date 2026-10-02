@@ -27,11 +27,11 @@
 
         .notification-card {
             /* 薄い黄色背景 ＆ 黒文字（シャドウ・エッジなし） */
-            background: #fef08a;
+            background: #ffff8a;
             color: #111827;
             
             /* 上下のパディングを詰めたスリムな設計 */
-            padding: 6px 20px;
+            padding: 4px 20px;
             border-radius: 4px;
             
             /* シャドウやエッジは完全に排除し、アクセントの左線だけ残す */
@@ -118,7 +118,7 @@
 
             setTimeout(() => {
                 card.remove();
-            }, 50000);
+            }, 5000);
         }
 
         setInterval(checkNewAttendance, POLL_INTERVAL);
