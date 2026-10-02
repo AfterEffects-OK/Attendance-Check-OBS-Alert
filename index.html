@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>出席通知オーバーレイ（左下）</title>
+    <title>出席通知オーバーレイ（背景透明・左下）</title>
     <style>
         body {
             margin: 0;
@@ -21,25 +21,31 @@
 
         #notification-container {
             display: flex;
-            flex-direction: column-reverse; /* 新しい通知が下にくる、または下から上へ積み上げ */
+            flex-direction: column-reverse; /* 新しい通知を下から上へ積み上げる */
             gap: 12px;
             align-items: flex-start;
         }
 
         .notification-card {
-            background: rgba(15, 23, 42, 0.9);
+            /* 背景を完全に透明に設定 */
+            background: transparent;
             color: #ffffff;
-            padding: 16px 28px;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-            border-left: 8px solid #3b82f6;
+            padding: 12px 24px;
+            border-radius: 4px;
+            
+            /* 背景はないため影を文字の視認性（ドロップシャドウ）代わりに適用 */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 
+                         -2px -2px 4px rgba(0, 0, 0, 0.8),
+                         2px -2px 4px rgba(0, 0, 0, 0.8),
+                         -2px 2px 4px rgba(0, 0, 0, 0.8);
+
+            border-left: 8px solid #3b82f6; /* 左側の青いアクセントライン */
             font-size: 28px;
             font-weight: bold;
             letter-spacing: 0.5px;
             opacity: 0;
             transform: translateX(-30px);
             animation: slideIn 0.4s ease forwards, fadeOut 0.4s ease 4.6s forwards;
-            backdrop-filter: blur(6px);
             white-space: nowrap;
         }
 
@@ -63,8 +69,7 @@
     <div id="notification-container"></div>
 
     <script>
-        // --- 設定項目 ---
-        // Apps ScriptのウェブアプリのURLをここに貼り付けてください
+        // 設定済みのGASウェブアプリのURL
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxPg8qswqVyNpWrL0gUX2DVh2uUJP6VUrk2VwqhSqn0rWjdci_KiYTBw4JFvLXQjU-8/exec';
         
         const POLL_INTERVAL = 3000;
@@ -75,7 +80,7 @@
                 const response = await fetch(GAS_WEB_APP_URL);
                 const data = await response.json();
                 
-                if (data && data.success) {
+                , if (data && data.success) {
                     const currentRowCount = data.rowCount;
                     const latestRecord = data.latestRecord;
 
