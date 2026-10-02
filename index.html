@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>出席通知オーバーレイ（薄い背景付き・左下）</title>
+    <title>出席通知オーバーレイ（不透明・コンパクト）</title>
     <style>
         body {
             margin: 0;
@@ -10,7 +10,6 @@
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
             background: transparent;
             overflow: hidden;
-            /* 画面全体の高さを確保し、要素を左下に配置 */
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -21,32 +20,34 @@
 
         #notification-container {
             display: flex;
-            flex-direction: column; /* 上から古い順に並び、新しいカードが下にどんどん追加される */
-            gap: 16px;
+            flex-direction: column;
+            gap: 12px;
             align-items: flex-start;
         }
 
         .notification-card {
-            /* 薄い半透明の黒い背景を適用（背景が少し透ける上品なデザイン） */
-            background: rgba(15, 23, 42, 0.65);
+            /* 完全な不透明の濃い紺色背景に変更（フェードのちらつきを解消） */
+            background: rgb(15, 23, 42);
             color: #ffffff;
-            padding: 14px 28px;
-            border-radius: 6px;
             
-            /* わずかに影をつけて立体感を出す */
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(4px); /* 背面の映像を少しぼかす効果 */
-
-            border-left: 10px solid #3b82f6; /* 左側の青いアクセントライン */
-            font-size: 42px;                  /* 大きな文字サイズ */
+            /* 上下のパディングを詰めてコンパクトに調整 (上下: 6px, 左右: 20px) */
+            padding: 6px 20px;
+            border-radius: 4px;
+            
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border-left: 8px solid #3b82f6;
+            
+            font-size: 42px;
             font-weight: bold;
             letter-spacing: 0.5px;
             
             opacity: 0;
-            /* 下からニュッと浮かび上がるアニメーション */
-            transform: translateY(30px);
-            animation: slideUp 0.4s ease forwards, fadeOut 0.4s ease 4.6s forwards;
+            transform: translateY(20px);
+            
+            /* スムーズなGPU描画アニメーション */
+            animation: slideUp 0.3s ease-out forwards, fadeOut 0.3s ease-in 4.7s forwards;
             white-space: nowrap;
+            will-change: opacity, transform;
         }
 
         @keyframes slideUp {
