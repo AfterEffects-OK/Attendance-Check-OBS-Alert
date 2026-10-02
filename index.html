@@ -33,11 +33,11 @@
             padding: 12px 24px;
             border-radius: 4px;
             
-            /* 背景はないため影を文字の視認性（ドロップシャドウ）代わりに適用 */
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 
-                         -2px -2px 4px rgba(0, 0, 0, 0.8),
-                         2px -2px 4px rgba(0, 0, 0, 0.8),
-                         -2px 2px 4px rgba(0, 0, 0, 0.8);
+            /* 背景がないため影を文字の視認性（ドロップシャドウ）代わりに適用 */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9), 
+                         -2px -2px 4px rgba(0, 0, 0, 0.9),
+                         2px -2px 4px rgba(0, 0, 0, 0.9),
+                         -2px 2px 4px rgba(0, 0, 0, 0.9);
 
             border-left: 8px solid #3b82f6; /* 左側の青いアクセントライン */
             font-size: 28px;
@@ -80,7 +80,7 @@
                 const response = await fetch(GAS_WEB_APP_URL);
                 const data = await response.json();
                 
-                , if (data && data.success) {
+                if (data && data.success) {
                     const currentRowCount = data.rowCount;
                     const latestRecord = data.latestRecord;
 
