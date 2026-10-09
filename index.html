@@ -75,7 +75,7 @@
         // 設定済みのGASウェブアプリのURL
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxPg8qswqVyNpWrL0gUX2DVh2uUJP6VUrk2VwqhSqn0rWjdci_KiYTBw4JFvLXQjU-8/exec';
         
-        const POLL_INTERVAL = 3000;
+        const POLL_INTERVAL = 3000; // 3000ms = 3秒ごとに出席登録シートをチェック
         let lastRowCount = -1;
 
         async function checkNewAttendance() {
