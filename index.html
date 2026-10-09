@@ -74,31 +74,59 @@
     <script>
         // 設定済みのGASウェブアプリのURL
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxPg8qswqVyNpWrL0gUX2DVh2uUJP6VUrk2VwqhSqn0rWjdci_KiYTBw4JFvLXQjU-8/exec';
+        const POLL_INTERVAL = 3000; // 3秒ごとにチェック
         
-        const POLL_INTERVAL = 3000; // 3000ms = 3秒ごとに出席登録シートをチェック
         let lastRowCount = -1;
-
+        let notificationQueue = [];
+        let isProcessingQueue = false;
+        
         async function checkNewAttendance() {
             try {
                 const response = await fetch(GAS_WEB_APP_URL);
                 const data = await response.json();
-                
+        
                 if (data && data.success) {
                     const currentRowCount = data.rowCount;
-                    const latestRecord = data.latestRecord;
-
+                    const recentRecords = data.recentRecords || [];
+        
                     if (lastRowCount === -1) {
+                        // 初回読み込み時は現在の行数を記録するのみ
                         lastRowCount = currentRowCount;
                     } else if (currentRowCount > lastRowCount) {
+                        // 新しく増えた件数を計算
+                        const addedCount = currentRowCount - lastRowCount;
                         lastRowCount = currentRowCount;
-                        if (latestRecord && latestRecord.time && latestRecord.name) {
-                            showNotification(latestRecord.time, latestRecord.name);
-                        }
+        
+                        // 増えた件数分だけ末尾から取り出してキュー（追加待ちリスト）に追加
+                        const newRecords = recentRecords.slice(-addedCount);
+                        notificationQueue.push(...newRecords);
+        
+                        // キューの消化処理を開始
+                        processQueue();
                     }
                 }
             } catch (error) {
                 console.error('出席データの取得に失敗しました:', error);
             }
+        }
+        
+        // キューに入った通知を順番に処理する関数
+        function processQueue() {
+            if (isProcessingQueue || notificationQueue.length === 0) return;
+        
+            isProcessingQueue = true;
+        
+            // 先頭の1件を取り出して表示
+            const record = notificationQueue.shift();
+            if (record && record.time && record.name) {
+                showNotification(record.time, record.name);
+            }
+        
+            // 複数人連続で追加された場合、前の人の表示から少し間隔（例: 0.5秒）を空けて次の人を表示
+            setTimeout(() => {
+                isProcessingQueue = false;
+                processQueue(); // 次の人の処理へ
+            }, 500); // 次のカードを出すまでの間隔（500ms = 0.5秒）
         }
 
         function showNotification(timestampStr, name) {
