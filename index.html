@@ -43,13 +43,21 @@
             font-weight: 800;
             letter-spacing: 0.5px;
             
+            /* 最初は非表示状態からスタート */
             opacity: 0;
             transform: translateY(20px);
             
-            /* スムーズなGPU描画アニメーション */
-            animation: slideUp 0.3s ease-out 10s forwards, fadeOut 0.3s ease-in 29.7s forwards;
             white-space: nowrap;
             will-change: opacity, transform;
+        }
+
+        /* JavaScriptからクラスが付与されたときにアニメーションを実行 */
+        .notification-card.show {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+
+        .notification-card.hide {
+            animation: fadeOut 0.3s ease-in forwards;
         }
 
         @keyframes slideUp {
@@ -97,7 +105,7 @@
                         const addedCount = currentRowCount - lastRowCount;
                         lastRowCount = currentRowCount;
         
-                        // 増えた件数分だけ末尾から取り出してキュー（追加待ちリスト）に追加
+                        // 増えた件数分だけ末尾から取り出してキューに追加
                         const newRecords = recentRecords.slice(-addedCount);
                         notificationQueue.push(...newRecords);
         
@@ -122,11 +130,11 @@
                 showNotification(record.time, record.name);
             }
         
-            // 複数人連続で追加された場合、前の人の表示から少し間隔（例: 0.5秒）を空けて次の人を表示
+            // 複数人連続で追加された場合の間隔（0.5秒）
             setTimeout(() => {
                 isProcessingQueue = false;
-                processQueue(); // 次の人の処理へ
-            }, 500); // 次のカードを出すまでの間隔（500ms = 0.5秒）
+                processQueue();
+            }, 500);
         }
 
         function showNotification(timestampStr, name) {
@@ -144,9 +152,20 @@
 
             container.appendChild(card);
 
+            // 1. レコード追加から【10秒後】に表示（スライドイン）を開始
             setTimeout(() => {
-                card.remove();
-            }, 30000);
+                card.classList.add('show');
+            }, 10000); // 10000ms = 10秒
+
+            // 2. 表示開始（10秒経過時点）から【30秒間】表示させた後、フェードアウトして削除
+            // 合計：10秒（待機） + 30秒（表示） = 40秒後に非表示アニメーション開始
+            setTimeout(() => {
+                card.classList.add('hide');
+                // フェードアウトアニメーション（0.3秒）が終わったら要素を削除
+                setTimeout(() => {
+                    card.remove();
+                }, 300);
+            }, 10000 + 30000);
         }
 
         setInterval(checkNewAttendance, POLL_INTERVAL);
