@@ -47,7 +47,7 @@
             transform: translateY(20px);
             
             /* スムーズなGPU描画アニメーション */
-            animation: slideUp 0.3s ease-out 30s forwards, fadeOut 0.3s ease-in 39.7s forwards;
+            animation: slideUp 0.3s ease-out 10s forwards, fadeOut 0.3s ease-in 19.7s forwards;
             white-space: nowrap;
             will-change: opacity, transform;
         }
@@ -146,7 +146,7 @@
 
             setTimeout(() => {
                 card.remove();
-            }, 40000);
+            }, 20000);
         }
 
         setInterval(checkNewAttendance, POLL_INTERVAL);
