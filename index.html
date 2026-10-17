@@ -23,22 +23,23 @@
             flex-direction: column;
             gap: 12px;
             align-items: flex-start;
-            /* 新しいカードが追加されたときに、既存のカードが上に押し上げられる動きを滑らかにする */
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .notification-card {
-            /* 薄い黄色背景 ＆ 黒文字 */
+            /* 薄い黄色背景 ＆ 黒文字（シャドウ・エッジなし） */
             background: #ffdfdf;
             color: #111827;
             
+            /* 上下のパディングを詰めたスリムな設計 */
             padding: 4px 20px;
             border-radius: 4px;
             
+            /* シャドウやエッジは完全に排除し、アクセントの左線だけ残す */
             box-shadow: none;
             border-left: 8px solid #ca8a04;
             
             font-size: 42px;
+            /* 文字が細く見えないよう、ウェイトを「900（極太）」に強化 */
             font-weight: 800;
             letter-spacing: 0.5px;
             
@@ -47,23 +48,40 @@
             transform: translateX(-20px);
             
             white-space: nowrap;
+            /* スムーズなGPU描画のヒント */
             will-change: opacity, transform;
-
-            /* カード自体の位置や透明度が変わるときの滑らかなトランジション */
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
-                        opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* .showが付与されたら、左からスライドしつつフェードイン */
         .notification-card.show {
-            opacity: 1;
-            transform: translateX(0);
+            animation: slideInFromLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* .hideが付与されたら、左へ消えつつフェードアウト */
         .notification-card.hide {
-            opacity: 0;
-            transform: translateX(-20px);
+            animation: fadeOutToLeft 0.5s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+        }
+
+        @keyframes slideInFromLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOutToLeft {
+            0% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
         }
     </style>
 </head>
@@ -140,7 +158,7 @@
 
             const card = document.createElement('div');
             card.className = 'notification-card';
-            card.textContent = `${timeText} `${name}さんが出席登録しました`;
+            card.textContent = `${timeText} ${name}さんが出席登録しました`;
 
             container.appendChild(card);
 
@@ -155,10 +173,10 @@
                 card.classList.remove('show');
                 card.classList.add('hide');
                 
-                // フェードアウトアニメーション（0.4秒）が終わったら要素を完全に削除
+                // フェードアウトアニメーション（0.5秒）が終わったら要素を完全に削除
                 setTimeout(() => {
                     card.remove();
-                }, 400);
+                }, 500);
             }, 10000 + 30000);
         }
 
