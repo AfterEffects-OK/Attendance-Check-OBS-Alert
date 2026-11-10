@@ -159,9 +159,9 @@
       const card = document.createElement('div');
       card.className = 'notification-card';
       
-      // 判定に応じてテキストを切り替え
+      // 判定に応じてテキストを切り替え（欠席登録の場合は時刻を省く）
       if (isAbsent) {
-        card.textContent = `${timeText} ${name}さんの欠席を登録しました`;
+        card.textContent = `${name}さんの欠席を登録しました`;
       } else if (isProxy) {
         card.textContent = `${timeText} ${name}さんの出席を代理登録しました`;
       } else {
