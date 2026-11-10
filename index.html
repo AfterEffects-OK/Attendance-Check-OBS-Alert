@@ -152,8 +152,9 @@
         timeText = `${timeMatch[1]}時${timeMatch[2]}分${timeMatch[3]}秒`;
       }
     
-      // 報告事項（E列）に「欠席処理」が含まれているか判定
+      // 報告事項（E列）の内容に応じた判定
       const isAbsent = report && report.includes('欠席処理');
+      const isProxy = report && report.includes('教師が代わって登録しました');
     
       const card = document.createElement('div');
       card.className = 'notification-card';
@@ -161,6 +162,8 @@
       // 判定に応じてテキストを切り替え
       if (isAbsent) {
         card.textContent = `${timeText} ${name}さんの欠席を登録しました`;
+      } else if (isProxy) {
+        card.textContent = `${timeText} ${name}さんの出席を代理登録しました`;
       } else {
         card.textContent = `${timeText} ${name}さんが出席登録しました`;
       }
