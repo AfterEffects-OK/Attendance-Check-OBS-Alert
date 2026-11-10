@@ -93,11 +93,23 @@
     <script>
     // 設定済みのGASウェブアプリのURL
     const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxPg8qswqVyNpWrL0gUX2DVh2uUJP6VUrk2VwqhSqn0rWjdci_KiYTBw4JFvLXQjU-8/exec';
+    
     const POLL_INTERVAL = 3000; // 3秒ごとにチェック
-    let lastRowCount = -1;
+    
+    // 出席用・公欠用の状態管理
+    let lastAttendanceRowCount = -1;
+    let lastAbsenceRowCount = -1;
+    
     let notificationQueue = [];
     let isProcessingQueue = false;
     
+    // 定期実行の監視ループ
+    async function checkNewData() {
+      await checkNewAttendance();
+      await checkNewAbsence();
+    }
+    
+    // 1. 出席データのチェック
     async function checkNewAttendance() {
       try {
         const response = await fetch(GAS_WEB_APP_URL);
@@ -105,19 +117,17 @@
         if (data && data.success) {
           const currentRowCount = data.rowCount;
           const recentRecords = data.recentRecords || [];
-          if (lastRowCount === -1) {
-            // 初回読み込み時は現在の行数を記録するのみ
-            lastRowCount = currentRowCount;
-          } else if (currentRowCount > lastRowCount) {
-            // 新しく増えた件数を計算
-            const addedCount = currentRowCount - lastRowCount;
-            lastRowCount = currentRowCount;
+          if (lastAttendanceRowCount === -1) {
+            lastAttendanceRowCount = currentRowCount;
+          } else if (currentRowCount > lastAttendanceRowCount) {
+            const addedCount = currentRowCount - lastAttendanceRowCount;
+            lastAttendanceRowCount = currentRowCount;
             
-            // 増えた件数分だけ末尾から取り出してキューに追加
             const newRecords = recentRecords.slice(-addedCount);
+            // 出席データであることを識別するプロパティを付与
+            newRecords.forEach(rec => rec.type = 'attendance');
             notificationQueue.push(...newRecords);
             
-            // キューの消化処理を開始
             processQueue();
           }
         }
@@ -126,46 +136,77 @@
       }
     }
     
+    // 2. 公欠データのチェック（?type=absence を付与）
+    async function checkNewAbsence() {
+      try {
+        const response = await fetch(`${GAS_WEB_APP_URL}?type=absence`);
+        const data = await response.json();
+        if (data && data.success) {
+          const currentRowCount = data.rowCount;
+          const recentRecords = data.recentRecords || [];
+          if (lastAbsenceRowCount === -1) {
+            lastAbsenceRowCount = currentRowCount;
+          } else if (currentRowCount > lastAbsenceRowCount) {
+            const addedCount = currentRowCount - lastAbsenceRowCount;
+            lastAbsenceRowCount = currentRowCount;
+            
+            const newRecords = recentRecords.slice(-addedCount);
+            // 公欠データであることを識別するプロパティを付与
+            newRecords.forEach(rec => rec.type = 'absence');
+            notificationQueue.push(...newRecords);
+            
+            processQueue();
+          }
+        }
+      } catch (error) {
+        console.error('公欠データの取得に失敗しました:', error);
+      }
+    }
+    
     // キューに入った通知を順番に処理する関数
     function processQueue() {
       if (isProcessingQueue || notificationQueue.length === 0) return;
       isProcessingQueue = true;
       
-      // 先頭の1件を取り出して表示（reportプロパティも渡す）
       const record = notificationQueue.shift();
-      if (record && record.time && record.name) {
-        showNotification(record.time, record.name, record.report || '');
+      if (record) {
+        showNotification(record);
       }
       
-      // 複数人連続で追加された場合の間隔（0.5秒）
       setTimeout(() => {
         isProcessingQueue = false;
         processQueue();
       }, 500);
     }
     
-    function showNotification(timestampStr, name, report) {
+    function showNotification(record) {
       const container = document.getElementById('notification-container');
-      let timeText = timestampStr;
-      const timeMatch = timestampStr.match(/(\d{1,2}):(\d{2}):(\d{2})/);
-      if (timeMatch) {
-        timeText = `${timeMatch[1]}時${timeMatch[2]}分${timeMatch[3]}秒`;
-      }
-    
-      // 報告事項（E列）の内容に応じた判定
-      const isAbsent = report && report.includes('欠席処理');
-      const isProxy = report && report.includes('教師が代わって登録しました');
-    
       const card = document.createElement('div');
       card.className = 'notification-card';
-      
-      // 判定に応じてテキストを切り替え（欠席登録の場合は時刻を省く）
-      if (isAbsent) {
-        card.textContent = `${name}さんの欠席を登録しました`;
-      } else if (isProxy) {
-        card.textContent = `${timeText} ${name}さんの出席を代理登録しました`;
-      } else {
-        card.textContent = `${timeText} ${name}さんが出席登録しました`;
+    
+      // 公欠データの場合
+      if (record.type === 'absence') {
+        card.textContent = `${record.name}さんの公欠を登録しました`;
+      } 
+      // 出席データの場合
+      else {
+        let timeText = record.time || '';
+        const timeMatch = timeText.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+        if (timeMatch) {
+          timeText = `${timeMatch[1]}時${timeMatch[2]}分${timeMatch[3]}秒`;
+        }
+    
+        const report = record.report || '';
+        const isAbsent = report.includes('欠席処理');
+        const isProxy = report.includes('教師が代わって登録しました');
+    
+        if (isAbsent) {
+          card.textContent = `${record.name}さんの欠席を登録しました`;
+        } else if (isProxy) {
+          card.textContent = `${timeText} ${record.name}さんの出席を代理登録しました`;
+        } else {
+          card.textContent = `${timeText} ${record.name}さんが出席登録しました`;
+        }
       }
     
       container.appendChild(card);
@@ -173,7 +214,7 @@
       // 1. レコード追加から【5秒後】に左からのスライドイン（.show）を開始
       setTimeout(() => {
         card.classList.add('show');
-      }, 5000); // 5000ms = 5秒
+      }, 5000);
     
       // 2. 表示開始から【30秒間】表示させた後、フェードアウトして削除
       setTimeout(() => {
@@ -185,7 +226,8 @@
       }, 5000 + 30000);
     }
     
-    setInterval(checkNewAttendance, POLL_INTERVAL);
+    // 定期ポーリング開始
+    setInterval(checkNewData, POLL_INTERVAL);
     </script>
 </body>
 </html>
