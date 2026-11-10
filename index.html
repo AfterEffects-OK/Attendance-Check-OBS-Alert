@@ -91,97 +91,98 @@
     <div id="notification-container"></div>
 
     <script>
-        // 設定済みのGASウェブアプリのURL
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxPg8qswqVyNpWrL0gUX2DVh2uUJP6VUrk2VwqhSqn0rWjdci_KiYTBw4JFvLXQjU-8/exec';
-        const POLL_INTERVAL = 3000; // 3秒ごとにチェック
-        
-        let lastRowCount = -1;
-        let notificationQueue = [];
-        let isProcessingQueue = false;
-        
-        async function checkNewAttendance() {
-            try {
-                const response = await fetch(GAS_WEB_APP_URL);
-                const data = await response.json();
-        
-                if (data && data.success) {
-                    const currentRowCount = data.rowCount;
-                    const recentRecords = data.recentRecords || [];
-        
-                    if (lastRowCount === -1) {
-                        // 初回読み込み時は現在の行数を記録するのみ
-                        lastRowCount = currentRowCount;
-                    } else if (currentRowCount > lastRowCount) {
-                        // 新しく増えた件数を計算
-                        const addedCount = currentRowCount - lastRowCount;
-                        lastRowCount = currentRowCount;
-        
-                        // 増えた件数分だけ末尾から取り出してキューに追加
-                        const newRecords = recentRecords.slice(-addedCount);
-                        notificationQueue.push(...newRecords);
-        
-                        // キューの消化処理を開始
-                        processQueue();
-                    }
-                }
-            } catch (error) {
-                console.error('出席データの取得に失敗しました:', error);
-            }
+    // 設定済みのGASウェブアプリのURL
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxPg8qswqVyNpWrL0gUX2DVh2uUJP6VUrk2VwqhSqn0rWjdci_KiYTBw4JFvLXQjU-8/exec';
+    const POLL_INTERVAL = 3000; // 3秒ごとにチェック
+    let lastRowCount = -1;
+    let notificationQueue = [];
+    let isProcessingQueue = false;
+    
+    async function checkNewAttendance() {
+      try {
+        const response = await fetch(GAS_WEB_APP_URL);
+        const data = await response.json();
+        if (data && data.success) {
+          const currentRowCount = data.rowCount;
+          const recentRecords = data.recentRecords || [];
+          if (lastRowCount === -1) {
+            // 初回読み込み時は現在の行数を記録するのみ
+            lastRowCount = currentRowCount;
+          } else if (currentRowCount > lastRowCount) {
+            // 新しく増えた件数を計算
+            const addedCount = currentRowCount - lastRowCount;
+            lastRowCount = currentRowCount;
+            
+            // 増えた件数分だけ末尾から取り出してキューに追加
+            const newRecords = recentRecords.slice(-addedCount);
+            notificationQueue.push(...newRecords);
+            
+            // キューの消化処理を開始
+            processQueue();
+          }
         }
-        
-        // キューに入った通知を順番に処理する関数
-        function processQueue() {
-            if (isProcessingQueue || notificationQueue.length === 0) return;
-        
-            isProcessingQueue = true;
-        
-            // 先頭の1件を取り出して表示
-            const record = notificationQueue.shift();
-            if (record && record.time && record.name) {
-                showNotification(record.time, record.name);
-            }
-        
-            // 複数人連続で追加された場合の間隔（0.5秒）
-            setTimeout(() => {
-                isProcessingQueue = false;
-                processQueue();
-            }, 500);
-        }
-
-        function showNotification(timestampStr, name) {
-            const container = document.getElementById('notification-container');
-
-            let timeText = timestampStr;
-            const timeMatch = timestampStr.match(/(\d{1,2}):(\d{2}):(\d{2})/);
-            if (timeMatch) {
-                timeText = `${timeMatch[1]}時${timeMatch[2]}分${timeMatch[3]}秒`;
-            }
-
-            const card = document.createElement('div');
-            card.className = 'notification-card';
-            card.textContent = `${timeText} ${name}さんが出席登録しました`;
-
-            container.appendChild(card);
-
-            // 1. レコード追加から【10秒後】に左からのスライドイン（.show）を開始
-            setTimeout(() => {
-                card.classList.add('show');
-            }, 5000); // 10000ms = 10秒
-
-            // 2. 表示開始（10秒経過時点）から【30秒間】表示させた後、フェードアウト（.hide）して削除
-            // 合計：10秒（待機） + 30秒（表示） = 40秒後に非表示アニメーション開始
-            setTimeout(() => {
-                card.classList.remove('show');
-                card.classList.add('hide');
-                
-                // フェードアウトアニメーション（0.5秒）が終わったら要素を完全に削除
-                setTimeout(() => {
-                    card.remove();
-                }, 500);
-            }, 5000 + 30000);
-        }
-
-        setInterval(checkNewAttendance, POLL_INTERVAL);
+      } catch (error) {
+        console.error('出席データの取得に失敗しました:', error);
+      }
+    }
+    
+    // キューに入った通知を順番に処理する関数
+    function processQueue() {
+      if (isProcessingQueue || notificationQueue.length === 0) return;
+      isProcessingQueue = true;
+      
+      // 先頭の1件を取り出して表示（reportプロパティも渡す）
+      const record = notificationQueue.shift();
+      if (record && record.time && record.name) {
+        showNotification(record.time, record.name, record.report || '');
+      }
+      
+      // 複数人連続で追加された場合の間隔（0.5秒）
+      setTimeout(() => {
+        isProcessingQueue = false;
+        processQueue();
+      }, 500);
+    }
+    
+    function showNotification(timestampStr, name, report) {
+      const container = document.getElementById('notification-container');
+      let timeText = timestampStr;
+      const timeMatch = timestampStr.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+      if (timeMatch) {
+        timeText = `${timeMatch[1]}時${timeMatch[2]}分${timeMatch[3]}秒`;
+      }
+    
+      // 報告事項（E列）に「欠席処理」が含まれているか判定
+      const isAbsent = report && report.includes('欠席処理');
+    
+      const card = document.createElement('div');
+      card.className = 'notification-card';
+      
+      // 判定に応じてテキストを切り替え
+      if (isAbsent) {
+        card.textContent = `${timeText} ${name}さんの欠席を登録しました`;
+      } else {
+        card.textContent = `${timeText} ${name}さんが出席登録しました`;
+      }
+    
+      container.appendChild(card);
+    
+      // 1. レコード追加から【5秒後】に左からのスライドイン（.show）を開始
+      setTimeout(() => {
+        card.classList.add('show');
+      }, 5000); // 5000ms = 5秒
+    
+      // 2. 表示開始から【30秒間】表示させた後、フェードアウトして削除
+      setTimeout(() => {
+        card.classList.remove('show');
+        card.classList.add('hide');
+        setTimeout(() => {
+          card.remove();
+        }, 500);
+      }, 5000 + 30000);
+    }
+    
+    setInterval(checkNewAttendance, POLL_INTERVAL);
     </script>
 </body>
 </html>
